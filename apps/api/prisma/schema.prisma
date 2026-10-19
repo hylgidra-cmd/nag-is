@@ -1,0 +1,677 @@
+// =============================================================================
+// NAG'IS — PostgreSQL schema
+//
+// Conventions used throughout:
+//
+//  * Primary keys are UUIDs stored in native `uuid` columns.
+//  * Money is ALWAYS an integer number of UZS so`m. The so`m has no
+//    circulating subunit, and integers keep money clear of floating-point
+//    drift. There is no Float/Decimal column anywhere in this file.
+//  * Every table carries `createdAt`; mutable tables also carry `updatedAt`.
+//  * Referential integrity is explicit. Content tables cascade from their
+//    parent; financial tables (Order, OrderItem, Payment, Certificate) use
+//    Restrict so transaction history can never be silently erased.
+//  * `isDemo` marks rows created by `prisma/seed.ts`. Real commercial records
+//    always have `isDemo = false`, so demo content is trivially separable and
+//    the UI can badge it in development.
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Prisma 7 removed `url` from this block. The CLI reads the connection string
+// from prisma.config.ts; the runtime client connects through the node-postgres
+// driver adapter in src/common/prisma/prisma.service.ts.
+datasource db {
+  provider = "postgresql"
+}
+
+// -----------------------------------------------------------------------------
+// Enums
+// -----------------------------------------------------------------------------
+
+enum UserRole {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum LessonType {
+  VIDEO
+  ARTICLE
+  QUIZ
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum ProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  CREATED
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentProvider {
+  DEV
+  PAYME
+  CLICK
+}
+
+// -----------------------------------------------------------------------------
+// Identity
+// -----------------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String
+  fullName     String
+  role         UserRole @default(STUDENT)
+
+  avatarUrl String?
+  headline  String?
+  bio       String?  @db.Text
+
+  isActive        Boolean   @default(true)
+  emailVerifiedAt DateTime?
+  lastLoginAt     DateTime?
+
+  isDemo Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  coursesTaught       Course[]             @relation("CourseInstructor")
+  enrollments         Enrollment[]
+  lessonProgress      LessonProgress[]
+  quizAttempts        QuizAttempt[]
+  orders              Order[]
+  certificates        Certificate[]
+  reviews             Review[]
+  savedCourses        SavedCourse[]
+  refreshTokens       RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+  auditLogs           AuditLog[]
+
+  @@index([role])
+  @@index([createdAt])
+}
+
+/// Rotating refresh tokens. Only the SHA-256 hash of a token is stored, so a
+/// database leak cannot be replayed as a session.
+model RefreshToken {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  /// Set when this token was rotated, so a replayed old token is detectable.
+  replacedBy String?
+
+  userAgent String?
+  ip        String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+/// Single-use password reset tokens. Hash-only, same reasoning as above.
+model PasswordResetToken {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// -----------------------------------------------------------------------------
+// Catalog
+// -----------------------------------------------------------------------------
+
+model Category {
+  id          String  @id @default(uuid()) @db.Uuid
+  slug        String  @unique
+  name        String
+  description String?
+  /// Lucide icon name, resolved to a component by the web app.
+  icon        String?
+  /// Hex accent colour for the category tile, e.g. "#4F46E5".
+  accent      String?
+  position    Int     @default(0)
+  isActive    Boolean @default(true)
+
+  isDemo Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  courses Course[]
+
+  @@index([isActive, position])
+}
+
+model Course {
+  id          String @id @default(uuid()) @db.Uuid
+  slug        String @unique
+  title       String
+  /// One-line card description.
+  summary     String
+  description String @db.Text
+
+  categoryId String   @db.Uuid
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  instructorId String @db.Uuid
+  instructor   User   @relation("CourseInstructor", fields: [instructorId], references: [id], onDelete: Restrict)
+
+  level  CourseLevel  @default(BEGINNER)
+  status CourseStatus @default(DRAFT)
+
+  /// Integer UZS so`m. 0 means the course is free.
+  priceUzs        Int  @default(0)
+  /// Pre-discount price, shown struck through. Must exceed priceUzs to apply.
+  comparePriceUzs Int?
+
+  thumbnailUrl  String?
+  promoVideoUrl String?
+  /// BCP-47-ish language tag. "kaa" = Qaraqalpaq.
+  language      String  @default("kaa")
+
+  objectives     String[]
+  prerequisites  String[]
+  targetAudience String[]
+
+  publishedAt DateTime?
+
+  /// Denormalised review aggregates, recomputed from real Review rows on every
+  /// review write (see ReviewsService.recomputeCourseRating). They exist so the
+  /// catalog can sort and filter by rating in SQL rather than loading every
+  /// review for every card. `ratingAverageBp` is the average times 100
+  /// (475 = 4.75), kept as an integer to avoid storing a float.
+  /// All three are 0 until a real review exists; the API reports a null rating
+  /// in that case rather than inventing a score.
+  ratingSum       Int @default(0)
+  ratingCount     Int @default(0)
+  ratingAverageBp Int @default(0)
+
+  /// Denormalised count of ACTIVE + COMPLETED enrollments, for "popular"
+  /// sorting. Recomputed on enroll/unenroll.
+  enrollmentCount Int @default(0)
+
+  isDemo Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  modules      CourseModule[]
+  enrollments  Enrollment[]
+  progress     LessonProgress[]
+  orderItems   OrderItem[]
+  certificates Certificate[]
+  reviews      Review[]
+  savedBy      SavedCourse[]
+
+  @@index([status, publishedAt])
+  @@index([categoryId, status])
+  @@index([instructorId])
+  @@index([level])
+  @@index([priceUzs])
+  @@index([ratingAverageBp])
+  @@index([enrollmentCount])
+}
+
+model CourseModule {
+  id       String @id @default(uuid()) @db.Uuid
+  courseId String @db.Uuid
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+  /// 0-based display order. Not unique: reordering swaps positions in a
+  /// transaction, which a unique constraint would deadlock against.
+  position    Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lessons Lesson[]
+
+  @@index([courseId, position])
+}
+
+model Lesson {
+  id       String       @id @default(uuid()) @db.Uuid
+  moduleId String       @db.Uuid
+  module   CourseModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  title       String
+  slug        String
+  type        LessonType @default(VIDEO)
+  description String?
+  /// Markdown body for ARTICLE lessons, or supporting notes for VIDEO.
+  content     String?    @db.Text
+
+  /// Provider-side video reference (asset id, or a plain URL while
+  /// VIDEO_DRIVER=none). NEVER serialised to a client that lacks access to
+  /// the lesson — the API resolves it into a short-lived playback descriptor.
+  videoRef String?
+
+  durationMinutes Int     @default(0)
+  position        Int     @default(0)
+  /// Preview lessons are watchable without enrolling or paying.
+  isPreview       Boolean @default(false)
+  isPublished     Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  quiz      Quiz?
+  resources LessonResource[]
+  progress  LessonProgress[]
+
+  @@unique([moduleId, slug])
+  @@index([moduleId, position])
+}
+
+model LessonResource {
+  id       String @id @default(uuid()) @db.Uuid
+  lessonId String @db.Uuid
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  title     String
+  url       String
+  sizeBytes Int?
+  mimeType  String?
+  position  Int     @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([lessonId, position])
+}
+
+// -----------------------------------------------------------------------------
+// Enrollment & progress
+// -----------------------------------------------------------------------------
+
+model Enrollment {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  courseId String @db.Uuid
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  status EnrollmentStatus @default(ACTIVE)
+
+  /// Last lesson opened, so "continue learning" can resume precisely. Kept as
+  /// a loose id rather than a foreign key: deleting a lesson must not cascade
+  /// into, or block, an enrollment row.
+  lastLessonId String? @db.Uuid
+
+  enrolledAt     DateTime  @default(now())
+  lastAccessedAt DateTime?
+  completedAt    DateTime?
+
+  isDemo Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, courseId])
+  @@index([courseId, status])
+  @@index([userId, status])
+  @@index([enrolledAt])
+}
+
+model LessonProgress {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  lessonId String @db.Uuid
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  /// Denormalised from lesson -> module -> course. Course-level progress and
+  /// the dashboard charts are read far more often than lessons move between
+  /// courses (which never happens in practice), so the extra column pays for
+  /// itself by removing two joins from every aggregate.
+  courseId String @db.Uuid
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  status      ProgressStatus @default(NOT_STARTED)
+  completedAt DateTime?
+
+  /// Video resume position in seconds.
+  lastPositionSeconds Int     @default(0)
+  /// Private, student-authored notes for this lesson.
+  notes               String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, lessonId])
+  @@index([userId, courseId])
+  @@index([userId, completedAt])
+  @@index([courseId])
+}
+
+model SavedCourse {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  courseId String @db.Uuid
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, courseId])
+  @@index([userId, createdAt])
+}
+
+// -----------------------------------------------------------------------------
+// Quizzes
+// -----------------------------------------------------------------------------
+
+model Quiz {
+  id       String @id @default(uuid()) @db.Uuid
+  /// One quiz per lesson.
+  lessonId String @unique @db.Uuid
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+  /// Percentage of total points required to pass.
+  passingScore Int    @default(60)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
+}
+
+model QuizQuestion {
+  id     String @id @default(uuid()) @db.Uuid
+  quizId String @db.Uuid
+  quiz   Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  prompt      String  @db.Text
+  explanation String? @db.Text
+  points      Int     @default(1)
+  position    Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  options QuizOption[]
+
+  @@index([quizId, position])
+}
+
+model QuizOption {
+  id         String       @id @default(uuid()) @db.Uuid
+  questionId String       @db.Uuid
+  question   QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  text String
+  /// Never serialised to a student before their attempt has been graded.
+  isCorrect Boolean @default(false)
+  position  Int     @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([questionId, position])
+}
+
+model QuizAttempt {
+  id     String @id @default(uuid()) @db.Uuid
+  quizId String @db.Uuid
+  quiz   Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  score    Int
+  maxScore Int
+  passed   Boolean
+
+  /// Graded answer sheet: [{ questionId, optionId, correctOptionId, isCorrect }].
+  answers Json
+
+  submittedAt DateTime @default(now())
+
+  @@index([userId, quizId])
+  @@index([quizId])
+}
+
+// -----------------------------------------------------------------------------
+// Commerce
+//
+// Order/OrderItem/Payment deliberately snapshot titles and prices. A later
+// price change or a renamed course must never rewrite history on a receipt.
+// -----------------------------------------------------------------------------
+
+model Order {
+  id String @id @default(uuid()) @db.Uuid
+  /// Human-readable reference shown to the student, e.g. "NAGIS-2026-0001".
+  reference String @unique
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  status OrderStatus @default(PENDING)
+  /// Server-computed sum of item prices, in integer UZS so`m.
+  totalUzs Int
+  currency String @default("UZS")
+
+  isDemo Boolean @default(false)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  paidAt    DateTime?
+
+  items    OrderItem[]
+  payments Payment[]
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+model OrderItem {
+  id      String @id @default(uuid()) @db.Uuid
+  orderId String @db.Uuid
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  courseId String @db.Uuid
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Restrict)
+
+  /// Snapshots taken at purchase time.
+  courseTitle  String
+  courseSlug   String
+  thumbnailUrl String?
+  unitPriceUzs Int
+
+  createdAt DateTime @default(now())
+
+  @@unique([orderId, courseId])
+  @@index([courseId])
+}
+
+model Payment {
+  id      String @id @default(uuid()) @db.Uuid
+  orderId String @db.Uuid
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  provider PaymentProvider
+  status   PaymentStatus   @default(CREATED)
+
+  amountUzs Int
+  currency  String @default("UZS")
+
+  /// Provider's own transaction id, once known.
+  providerPaymentId String?
+  /// Guards against double-charging on a retried create-payment call.
+  idempotencyKey    String  @unique
+
+  checkoutUrl   String?
+  failureReason String?
+  /// Last provider payload seen, for support and reconciliation.
+  rawPayload    Json?
+
+  isDemo Boolean @default(false)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  paidAt    DateTime?
+
+  @@unique([provider, providerPaymentId])
+  @@index([orderId])
+  @@index([status, createdAt])
+}
+
+/// Every inbound provider webhook, recorded before it is acted on. The unique
+/// (provider, externalEventId) pair makes replayed deliveries no-ops.
+model PaymentWebhookEvent {
+  id       String          @id @default(uuid()) @db.Uuid
+  provider PaymentProvider
+
+  externalEventId String
+  signatureValid  Boolean
+  payload         Json
+
+  processedAt DateTime?
+  error       String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([provider, externalEventId])
+  @@index([provider, createdAt])
+}
+
+// -----------------------------------------------------------------------------
+// Certificates & reviews
+// -----------------------------------------------------------------------------
+
+model Certificate {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  courseId String @db.Uuid
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Restrict)
+
+  /// Publicly quotable, e.g. "NAGIS-7F3K-9QB2-XM41".
+  verificationCode String @unique
+
+  /// Snapshots, so a renamed course or user cannot invalidate a issued
+  /// certificate's printed text.
+  recipientName   String
+  courseTitle     String
+  instructorName  String
+  durationMinutes Int
+
+  issuedAt DateTime @default(now())
+
+  isDemo Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+  @@index([issuedAt])
+}
+
+model Review {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  courseId String @db.Uuid
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  /// 1..5, enforced by the API and by a CHECK constraint added in migration.
+  rating      Int
+  comment     String? @db.Text
+  isPublished Boolean @default(true)
+
+  isDemo Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, courseId])
+  @@index([courseId, isPublished])
+  @@index([rating])
+}
+
+// -----------------------------------------------------------------------------
+// Audit
+// -----------------------------------------------------------------------------
+
+/// Append-only record of administrative actions. actorId is nullable and set
+/// to NULL on user deletion so the trail survives the account.
+model AuditLog {
+  id      String  @id @default(uuid()) @db.Uuid
+  actorId String? @db.Uuid
+  actor   User?   @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  /// e.g. "course.publish", "user.role_change", "payment.refund".
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json?
+
+  ip        String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
+
+  @@index([actorId, createdAt])
+  @@index([entityType, entityId])
+  @@index([action, createdAt])
+}

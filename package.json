@@ -1,0 +1,42 @@
+{
+  "name": "nagis",
+  "version": "0.1.0",
+  "private": true,
+  "description": "NAG'IS — online IT bilim beriw platformasi (Qaraqalpaqstan, Uzbekistan)",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "scripts": {
+    "dev": "concurrently -n api,web -c magenta,cyan \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:web": "npm run dev --workspace @nagis/web",
+    "dev:api": "npm run start:dev --workspace @nagis/api",
+    "build": "npm run build --workspace @nagis/shared-types && npm run build --workspace @nagis/shared-validation && npm run build --workspace @nagis/api && npm run build --workspace @nagis/web",
+    "build:packages": "npm run build --workspace @nagis/shared-types && npm run build --workspace @nagis/shared-validation",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "db:generate": "npm run db:generate --workspace @nagis/api",
+    "db:migrate": "npm run db:migrate --workspace @nagis/api",
+    "db:seed": "npm run db:seed --workspace @nagis/api",
+    "db:reset": "npm run db:reset --workspace @nagis/api",
+    "db:studio": "npm run db:studio --workspace @nagis/api",
+    "setup": "npm install && npm run build:packages && npm run db:generate"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6",
+    "prettier": "^3.9.10",
+    "typescript": "5.9.3"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "prisma@7.10.1": true,
+    "unrs-resolver@1.12.2": true,
+    "@prisma/engines@7.10.1": true
+  }
+}

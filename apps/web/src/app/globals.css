@@ -1,0 +1,402 @@
+@import 'tailwindcss';
+
+/* ==========================================================================
+   NAG'IS design tokens
+   ==========================================================================
+
+   The brand sits on a deep navy "ink" scale with a restrained accent set:
+   electric blue as the primary action colour, violet and teal used sparingly
+   for category and data accents. Light is the default theme; dark is opt-in.
+
+   Everything is declared as a CSS custom property on :root and surfaced to
+   Tailwind through @theme inline, so a token can be re-pointed for dark mode
+   in one place and every utility follows.
+   ========================================================================== */
+
+@theme inline {
+  /* -- Brand ink (primary navy scale) ----------------------------------- */
+  --color-ink-50: #f1f5f9;
+  --color-ink-100: #e2e8f0;
+  --color-ink-200: #c7d2e1;
+  --color-ink-300: #a0b1c8;
+  --color-ink-400: #6b82a3;
+  --color-ink-500: #456184;
+  --color-ink-600: #324a69;
+  --color-ink-700: #243850;
+  --color-ink-800: #18263a;
+  --color-ink-900: #0f1a29;
+  --color-ink-950: #080f1a;
+
+  /* -- Accents ---------------------------------------------------------- */
+  --color-accent-50: #eef4ff;
+  --color-accent-100: #d9e5ff;
+  --color-accent-200: #bcd1ff;
+  --color-accent-300: #8eb3ff;
+  --color-accent-400: #598cff;
+  --color-accent-500: #2f66f6;
+  --color-accent-600: #1d4ae3;
+  --color-accent-700: #1839b8;
+  --color-accent-800: #193291;
+  --color-accent-900: #1a2f73;
+
+  --color-violet-accent: #7c5cf0;
+  --color-teal-accent: #0e9f8f;
+
+  /* -- Semantic --------------------------------------------------------- */
+  --color-success: #0f9d58;
+  --color-success-soft: #e6f6ee;
+  --color-warning: #c2780a;
+  --color-warning-soft: #fdf3e2;
+  --color-danger: #d92d30;
+  --color-danger-soft: #fdeaea;
+
+  /* -- Surfaces (re-pointed in dark mode) ------------------------------- */
+  --color-canvas: var(--surface-canvas);
+  --color-surface: var(--surface-raised);
+  --color-surface-muted: var(--surface-muted);
+  --color-hairline: var(--surface-hairline);
+  --color-body: var(--text-body);
+  --color-heading: var(--text-heading);
+  --color-muted: var(--text-muted);
+  --color-faint: var(--text-faint);
+
+  /* -- Typography ------------------------------------------------------- */
+  --font-sans:
+    'Inter var', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  --font-display:
+    'Inter var', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono:
+    ui-monospace, 'JetBrains Mono', 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
+
+  /* Editorial display scale, tightened at the top end. */
+  --text-display-2xl: 4.5rem;
+  --text-display-2xl--line-height: 1.02;
+  --text-display-2xl--letter-spacing: -0.035em;
+  --text-display-2xl--font-weight: 760;
+
+  --text-display-xl: 3.5rem;
+  --text-display-xl--line-height: 1.05;
+  --text-display-xl--letter-spacing: -0.03em;
+  --text-display-xl--font-weight: 760;
+
+  --text-display-lg: 2.75rem;
+  --text-display-lg--line-height: 1.1;
+  --text-display-lg--letter-spacing: -0.025em;
+  --text-display-lg--font-weight: 740;
+
+  --text-display-md: 2.125rem;
+  --text-display-md--line-height: 1.15;
+  --text-display-md--letter-spacing: -0.02em;
+  --text-display-md--font-weight: 720;
+
+  --text-display-sm: 1.625rem;
+  --text-display-sm--line-height: 1.25;
+  --text-display-sm--letter-spacing: -0.015em;
+  --text-display-sm--font-weight: 700;
+
+  /* -- Radii ------------------------------------------------------------ */
+  --radius-card: 1rem;
+  --radius-panel: 1.375rem;
+  --radius-pill: 999px;
+
+  /* -- Elevation: low-contrast, tinted with the brand navy -------------- */
+  --shadow-subtle: 0 1px 2px 0 rgb(15 26 41 / 0.04), 0 1px 3px 0 rgb(15 26 41 / 0.06);
+  --shadow-card: 0 1px 2px 0 rgb(15 26 41 / 0.04), 0 8px 24px -8px rgb(15 26 41 / 0.1);
+  --shadow-lifted: 0 2px 4px 0 rgb(15 26 41 / 0.05), 0 18px 40px -12px rgb(15 26 41 / 0.18);
+  --shadow-focus: 0 0 0 3px rgb(47 102 246 / 0.28);
+
+  /* -- Motion ----------------------------------------------------------- */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* -- Light theme (default) ------------------------------------------------ */
+:root {
+  --surface-canvas: #fbfcfe;
+  --surface-raised: #ffffff;
+  --surface-muted: #f4f6fa;
+  --surface-hairline: #e4e9f2;
+
+  --text-heading: #0f1a29;
+  --text-body: #243850;
+  --text-muted: #5b6e8a;
+  --text-faint: #8597ad;
+
+  color-scheme: light;
+}
+
+/* -- Dark theme ---------------------------------------------------------- */
+/* Applied when the OS prefers dark AND the user has not pinned light. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --surface-canvas: #080f1a;
+    --surface-raised: #0f1a29;
+    --surface-muted: #16243a;
+    --surface-hairline: #223247;
+
+    --text-heading: #f1f5f9;
+    --text-body: #c7d2e1;
+    --text-muted: #94a6bd;
+    --text-faint: #6b82a3;
+
+    color-scheme: dark;
+  }
+}
+
+/* Applied when the user explicitly picked dark. */
+:root[data-theme='dark'] {
+  --surface-canvas: #080f1a;
+  --surface-raised: #0f1a29;
+  --surface-muted: #16243a;
+  --surface-hairline: #223247;
+
+  --text-heading: #f1f5f9;
+  --text-body: #c7d2e1;
+  --text-muted: #94a6bd;
+  --text-faint: #6b82a3;
+
+  color-scheme: dark;
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+@layer base {
+  * {
+    border-color: var(--surface-hairline);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--surface-canvas);
+    color: var(--text-body);
+    font-family: var(--font-sans);
+    font-feature-settings: 'cv11', 'ss01';
+    font-variation-settings: 'opsz' 32;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: var(--text-heading);
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* A single, consistent focus ring everywhere, visible in both themes. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent-500);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Qaraqalpaq Latin uses á ǵ ń ó ú ı — make sure nothing clips them. */
+  :lang(kaa) {
+    font-synthesis-weight: none;
+  }
+
+  ::selection {
+    background-color: var(--color-accent-200);
+    color: var(--color-ink-900);
+  }
+}
+
+/* ==========================================================================
+   Utilities
+   ========================================================================== */
+
+@layer utilities {
+  /* Page gutter: 16px on phones, growing to a centred max-width. */
+  .container-page {
+    width: 100%;
+    margin-inline: auto;
+    padding-inline: 1rem;
+    max-width: 80rem;
+  }
+
+  @media (min-width: 640px) {
+    .container-page {
+      padding-inline: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container-page {
+      padding-inline: 2rem;
+    }
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Gradient text used only for the single accented hero phrase. */
+  .text-gradient-brand {
+    background-image: linear-gradient(
+      100deg,
+      var(--color-accent-600) 0%,
+      var(--color-violet-accent) 55%,
+      var(--color-teal-accent) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Hairline grid used behind the hero. Pure CSS, no image request. */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, var(--surface-hairline) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--surface-hairline) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+
+  .mask-fade-b {
+    mask-image: linear-gradient(to bottom, black 45%, transparent 100%);
+  }
+
+  .mask-fade-radial {
+    mask-image: radial-gradient(ellipse 65% 55% at 50% 35%, black 40%, transparent 100%);
+  }
+
+  /* Visually hidden but available to assistive technology. */
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   Keyframes
+   Only transform/opacity animations, so they stay on the compositor.
+   ========================================================================== */
+
+@keyframes nagis-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes nagis-dash {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes nagis-pulse-ring {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.55;
+  }
+  70% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+@keyframes nagis-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes nagis-orbit {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-float {
+  animation: nagis-float 6s var(--ease-in-out-soft) infinite;
+}
+
+.animate-orbit {
+  animation: nagis-orbit 28s linear infinite;
+}
+
+.animate-pulse-ring {
+  animation: nagis-pulse-ring 2.8s var(--ease-out-soft) infinite;
+}
+
+/* Skeleton shimmer for asynchronous data. */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--surface-muted);
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--surface-raised) 65%, transparent),
+    transparent
+  );
+  animation: nagis-shimmer 1.6s infinite;
+}
+
+/* ==========================================================================
+   Reduced motion
+   Honour the OS preference: kill decorative movement, keep state changes
+   legible. Nothing here is load-bearing for comprehension.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .skeleton::after {
+    animation: none;
+  }
+}

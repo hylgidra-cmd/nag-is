@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: nagis-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nagis
+      POSTGRES_PASSWORD: nagis_dev_password
+      POSTGRES_DB: nagis
+    ports:
+      - '5433:5432'
+    volumes:
+      - nagis_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U nagis -d nagis']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  nagis_pgdata:
