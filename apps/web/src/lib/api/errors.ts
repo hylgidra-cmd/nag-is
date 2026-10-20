@@ -48,6 +48,18 @@ export class ApiError extends Error {
     return this.status === 404;
   }
 
+  /**
+   * True when the API rejected the request itself.
+   *
+   * For a route whose only input is an id, this means the id was malformed --
+   * a non-UUID where a UUID is required. Such an id cannot identify a record,
+   * so callers treat it as "not found" rather than letting it surface as a
+   * server error.
+   */
+  get isBadRequest(): boolean {
+    return this.status === 400;
+  }
+
   /** True when the browser never reached the server. */
   get isNetwork(): boolean {
     return this.status === 0;

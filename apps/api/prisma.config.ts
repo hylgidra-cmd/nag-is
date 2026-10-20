@@ -44,7 +44,21 @@ const databaseUrl =
   process.env['DATABASE_URL_UNPOOLED'] ??
   process.env['DATABASE_URL'];
 
-if (!databaseUrl) {
+/*
+ * `prisma generate` only reads the schema -- it never opens a connection. This
+ * file used to throw whenever no URL was present, which made every build
+ * depend on a database credential it does not use: a production build failed
+ * at `prisma generate` purely because DATABASE_URL was not yet set.
+ *
+ * So the datasource is attached only when a URL exists, and the error is
+ * raised only for the commands that actually need one (migrate, db, studio,
+ * introspect). Those still fail early with a readable message instead of a
+ * confusing connection error.
+ */
+const NEEDS_DATASOURCE = ['migrate', 'db', 'studio', 'introspect', 'validate'];
+const requiresDatasource = process.argv.some((arg) => NEEDS_DATASOURCE.includes(arg));
+
+if (!databaseUrl && requiresDatasource) {
   throw new Error(
     'No database connection string found. Set DIRECT_DATABASE_URL (or ' +
       'DATABASE_URL_UNPOOLED, or DATABASE_URL). Locally, copy .env.example to ' +
@@ -55,9 +69,7 @@ if (!databaseUrl) {
 export default defineConfig({
   schema: resolve(import.meta.dirname, 'prisma', 'schema.prisma'),
 
-  datasource: {
-    url: databaseUrl,
-  },
+  ...(databaseUrl ? { datasource: { url: databaseUrl } } : {}),
 
   migrations: {
     path: resolve(import.meta.dirname, 'prisma', 'migrations'),

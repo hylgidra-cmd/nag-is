@@ -31,7 +31,8 @@ const loadLesson = cache(async (lessonId: string) => {
     return { ok: true as const, lesson: await getLesson(lessonId) };
   } catch (error) {
     if (isApiError(error)) {
-      if (error.isNotFound) notFound();
+      // A malformed lessonId cannot name a lesson, so it is a 404, not a 500.
+      if (error.isNotFound || error.isBadRequest) notFound();
       if (error.isForbidden) return { ok: false as const, reason: 'locked' as const };
       if (error.isUnauthorized) return { ok: false as const, reason: 'auth' as const };
     }

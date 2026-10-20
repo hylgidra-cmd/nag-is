@@ -18,7 +18,10 @@ const loadCourse = cache(async (id: string) => {
   try {
     return await getAdminCourse(id);
   } catch (error) {
-    if (isApiError(error) && (error.isNotFound || error.isForbidden)) notFound();
+    // A malformed id cannot name a course, so it is a 404, not a 500.
+    if (isApiError(error) && (error.isNotFound || error.isForbidden || error.isBadRequest)) {
+      notFound();
+    }
     throw error;
   }
 });
