@@ -23,6 +23,7 @@
     "db:migrate:deploy": "node scripts/with-env.mjs prisma migrate deploy",
     "db:reset": "node scripts/with-env.mjs prisma migrate reset --force",
     "db:seed": "node scripts/with-env.mjs prisma db seed",
+    "admin:create": "node scripts/with-env.mjs node --import tsx scripts/create-admin.ts",
     "db:studio": "node scripts/with-env.mjs prisma studio",
     "db:push": "node scripts/with-env.mjs prisma db push",
     "prebuild": "node scripts/clean.mjs",
