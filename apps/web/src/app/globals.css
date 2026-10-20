@@ -171,6 +171,12 @@
   html {
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
+    /*
+      Belt-and-braces against a horizontally scrolling page on a phone. Any
+      actual overflow should still be fixed at its source — this only stops a
+      regression from becoming a sideways-scrolling page.
+    */
+    overflow-x: hidden;
   }
 
   body {

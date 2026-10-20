@@ -16,7 +16,27 @@ for (const candidate of [resolve(repoRoot, '.env'), resolve(import.meta.dirname,
   }
 }
 
-const apiInternalUrl = process.env['API_INTERNAL_URL'] ?? 'http://localhost:3001';
+/**
+ * Where to proxy /api/v1 to, for local development and self-hosted runs.
+ *
+ * On Vercel this app does not proxy the API at all: a top-level rewrite in
+ * vercel.json routes /api/* straight to the api service, so the request is
+ * resolved by the platform before it ever reaches this app. Emitting a Next
+ * rewrite there would also be useless, because rewrites are baked into the
+ * routes manifest at build time while the service binding that carries the
+ * API URL only resolves at runtime.
+ *
+ * The localhost default is scoped to non-production on purpose. A production
+ * build must never silently fall back to a local address: with nothing
+ * configured, no rewrite is emitted and the misconfiguration stays visible
+ * instead of pointing at a machine that is not there.
+ */
+const isVercel = Boolean(process.env['VERCEL']);
+const isProductionBuild = process.env.NODE_ENV === 'production';
+
+const apiProxyTarget = isVercel
+  ? undefined
+  : (process.env['API_INTERNAL_URL'] ?? (isProductionBuild ? undefined : 'http://localhost:3001'));
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -37,10 +57,12 @@ const nextConfig: NextConfig = {
    * behind one reverse proxy.
    */
   async rewrites() {
+    if (!apiProxyTarget) return [];
+
     return [
       {
         source: '/api/v1/:path*',
-        destination: `${apiInternalUrl}/api/v1/:path*`,
+        destination: `${apiProxyTarget}/api/v1/:path*`,
       },
     ];
   },

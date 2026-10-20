@@ -19,9 +19,38 @@ const API_PREFIX = '/api/v1';
 
 const isServer = typeof window === 'undefined';
 
+/**
+ * Absolute base for server-side requests.
+ *
+ * In the browser this is the empty string, so requests stay relative and
+ * same-origin. On the server there is no origin to be relative to, so an
+ * absolute base is required.
+ *
+ * `API_INTERNAL_URL` is the one source of that base. On Vercel it is injected
+ * at runtime by the `api` service binding declared in vercel.json, which
+ * reaches the API over the internal network rather than back out through the
+ * public edge.
+ *
+ * There is deliberately no localhost fallback in production. Defaulting to a
+ * local address on a deployed server turns a missing variable into a confusing
+ * connection error against a machine that is not there; throwing names the
+ * actual problem.
+ */
 function baseUrl(): string {
   if (!isServer) return '';
-  return process.env['API_INTERNAL_URL'] ?? 'http://localhost:3001';
+
+  const configured = process.env['API_INTERNAL_URL'];
+  // A binding supplies a URL base that may carry a trailing slash, which
+  // would otherwise produce a double slash before the /api/v1 prefix.
+  if (configured) return configured.replace(/\/+$/, '');
+
+  if (process.env.NODE_ENV !== 'production') return 'http://localhost:3001';
+
+  throw new Error(
+    'API_INTERNAL_URL is not set. Server-side requests need an absolute API ' +
+      'base URL. On Vercel this is injected by the `api` service binding in ' +
+      'vercel.json; elsewhere set it to the API origin.',
+  );
 }
 
 export interface RequestOptions {

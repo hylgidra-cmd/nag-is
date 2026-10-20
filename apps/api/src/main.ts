@@ -77,15 +77,24 @@ async function bootstrap(): Promise<void> {
     });
   }
 
-  await app.listen(config.port, '0.0.0.0');
+  /*
+   * A managed platform tells the process which port to bind by injecting
+   * PORT, and routes traffic to it. That is deployment plumbing rather than
+   * application configuration, so it is read straight from the environment
+   * instead of going through the validated schema; API_PORT stays the
+   * authoritative setting everywhere else.
+   */
+  const port = Number(process.env['PORT'] ?? config.port);
+
+  await app.listen(port, '0.0.0.0');
 
   const logger = app.get(Logger);
   logger.log(
-    `NAGIS API listening on http://localhost:${config.port}/${config.globalPrefix}/v1 ` +
+    `NAGIS API listening on http://localhost:${port}/${config.globalPrefix}/v1 ` +
       `(env=${config.nodeEnv}, payments=${config.payments.driver}, video=${config.video.driver})`,
   );
   if (!config.isProduction) {
-    logger.log(`Swagger UI: http://localhost:${config.port}/${config.globalPrefix}/docs`);
+    logger.log(`Swagger UI: http://localhost:${port}/${config.globalPrefix}/docs`);
   }
 }
 

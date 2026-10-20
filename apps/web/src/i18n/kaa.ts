@@ -1211,6 +1211,120 @@ export const kaa = {
   },
 
   /* ====================================================================
+   * Legal pages
+   *
+   * Plain-language policy text. It describes exactly what this build does
+   * today — no payment processing, no third-party analytics — so it should be
+   * revised by whoever operates the platform before launch.
+   * ================================================================= */
+  legal: {
+    updatedAt: 'Aqırǵı jańalanıw',
+    draftNotice:
+      'Diqqat: bul huqıqıy tekst platforma islep shıǵarıw basqıshında turǵanı ushın '
+      + 'dáslepki kórinisinde. Platforma iske túsiriliwden aldın ol huqıqshı '
+      + 'tárepinen tekseriliwi kerek.',
+
+    terms: {
+      title: 'Paydalanıw shártleri',
+      lead:
+        "NAG'IS platformasınan paydalanıw arqalı siz tómendegi shártlerdi qabıl "
+        + 'etesiz.',
+      sections: [
+        {
+          title: 'Xizmettiń mánisi',
+          body:
+            "NAG'IS — IT baǵdarları boyınsha onlayn kurslar usınatuǵın bilim beriw "
+            + 'platformasi. Kurslardıń mazmunı tek bilim beriw maqsetinde usınıladı.',
+        },
+        {
+          title: 'Akkaunt',
+          body:
+            'Akkauntıńızdıń paroli hám qáwipsizligi ushın óz juwapkershiligińiz. '
+            + 'Bir akkaunttı basqalar menen bólisiw ruxsat etilmeydi. Durıs '
+            + 'maǵlıwmat beriwińiz shárt.',
+        },
+        {
+          title: 'Kursqa jazılıw hám tólew',
+          body:
+            'Biypul kurslarǵa dárhal jazılıwıńız múmkin. Pullı kurslar ushın tólem '
+            + 'sistemasınıń integraciyası házirshe tamamlanmaǵan — sol sebepli bul '
+            + 'build-ta haqıyqıy tólem qabıl etilmeydi.',
+        },
+        {
+          title: 'Mazmunnan paydalanıw',
+          body:
+            'Kurs materialları tek jeke oqıw ushın. Olardı kóshirip tarqatıw, '
+            + 'satıw yamasa basqa platformada járiyalaw ruxsat etilmeydi.',
+        },
+        {
+          title: 'Sertifikatlar',
+          body:
+            'Kurs tolıq tamamlanǵannan soń sertifikat beriledi. Sertifikat tek '
+            + "NAG'IS platformasında ótilgen kurstı tastıyıqlaydı hám mámleketlik "
+            + 'diplom ornın basmaydı.',
+        },
+        {
+          title: 'Shártlerdiń ózgeriwi',
+          body:
+            'Bul shártler ózgeriwi múmkin. Áhmiyetli ózgerisler haqqında '
+            + 'paydalanıwshılarǵa xabar beriledi.',
+        },
+      ],
+    },
+
+    privacy: {
+      title: 'Jeke maǵlıwmatlar siyasatı',
+      lead:
+        'Bul bette qanday maǵlıwmatlar jıynalatuǵını hám olar qalay '
+        + 'paydalanılatuǵını túsindiriledi.',
+      sections: [
+        {
+          title: 'Qanday maǵlıwmatlar jıynaladı',
+          body:
+            'Dizimnen ótiwde: atıńız hám email mánzilińiz. Oqıw procesinde: '
+            + 'qaysı sabaqlardı tamamlaǵanıńız, test nátiyjelerińiz hám '
+            + 'belgilewlerińiz. Sonnan tısqarı sessiya haqqında texnikalıq '
+            + 'maǵlıwmat (IP mánzil, brauzer túri) saqlanadı.',
+        },
+        {
+          title: 'Parol qalay saqlanadı',
+          body:
+            'Parolińiz hesh qashan ashıq kóriniste saqlanmaydı. Ol bcrypt '
+            + 'algoritmi arqalı heshlenedi, sol sebepli onı qaytarıp oqıwdıń '
+            + 'imkaniyatı joq — biz de onı kóre almaymız.',
+        },
+        {
+          title: 'Maǵlıwmatlar nege paydalanıladı',
+          body:
+            'Tek xizmetti islew ushın: kirisiwdi támiyinlew, oqıw ilgerilewińizdi '
+            + 'saqlaw, sertifikat beriw hám platformanı jaqsılaw. Maǵlıwmatlarıńız '
+            + 'reklama maqsetinde satılmaydı.',
+        },
+        {
+          title: 'Úshinshi tárepler',
+          body:
+            'Bul build-ta úshinshi táreptiń analitika yamasa reklama quralları '
+            + 'qollanılmaydı. Tólem hám video xizmetleri qosılǵanda bul bólim '
+            + 'jańalanadı.',
+        },
+        {
+          title: 'Belgilewler (cookies)',
+          body:
+            'Tek sessiya ushın kerekli belgilewler qollanıladı. Olar HttpOnly '
+            + 'bolıp, JavaScript arqalı oqılmaydı. Qadaǵalaw (tracking) '
+            + 'belgilewleri paydalanılmaydı.',
+        },
+        {
+          title: 'Huqıqlarıńız',
+          body:
+            'Óz maǵlıwmatlarıńızdı kóriw, ózgertiw yamasa akkauntıńızdı óshiriw '
+            + 'huqıqıńız bar. Bul ushın biz menen baylanısıń: salem@nagis.uz',
+        },
+      ],
+    },
+  },
+
+  /* ====================================================================
    * Not found / generic pages
    * ================================================================= */
   notFound: {

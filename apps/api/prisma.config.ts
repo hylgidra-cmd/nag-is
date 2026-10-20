@@ -26,12 +26,22 @@ for (const candidate of [
   }
 }
 
-const databaseUrl = process.env['DATABASE_URL'];
+/*
+ * Migrations prefer a direct connection.
+ *
+ * A deployed API connects through a connection pooler, but schema migrations
+ * cannot run over one in transaction mode: DDL and advisory locks need a
+ * session that is stable for the whole migration, and a transaction-mode
+ * pooler hands out a different backend per statement. DIRECT_DATABASE_URL is
+ * that unpooled connection; locally there is no pooler, so DATABASE_URL is
+ * used and nothing extra needs configuring.
+ */
+const databaseUrl = process.env['DIRECT_DATABASE_URL'] ?? process.env['DATABASE_URL'];
 
 if (!databaseUrl) {
   throw new Error(
-    'DATABASE_URL is not set. Copy .env.example to .env in the repository root ' +
-      'and set the PostgreSQL connection string.',
+    'Neither DIRECT_DATABASE_URL nor DATABASE_URL is set. Copy .env.example to ' +
+      '.env in the repository root and set the PostgreSQL connection string.',
   );
 }
 

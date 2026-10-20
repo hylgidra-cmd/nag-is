@@ -23,13 +23,21 @@ import { t } from '@/i18n';
 export function HeroVisual() {
   const reduceMotion = useReducedMotion();
 
-  // With reduced motion every element starts (and stays) at its end state.
+  /**
+   * Entrance for the floating cards.
+   *
+   * Deliberately does NOT animate opacity from 0. These elements carry real
+   * labels, and `initial` is serialised into the SSR HTML — starting at
+   * `opacity: 0` means the hero is incomplete for anyone whose JS is slow,
+   * blocked or still loading. The entrance is a slight scale instead, which
+   * reads correctly even if it never runs.
+   */
   const appear = (delay: number) =>
     reduceMotion
-      ? { initial: { opacity: 1, scale: 1 }, animate: { opacity: 1, scale: 1 } }
+      ? { initial: { scale: 1 }, animate: { scale: 1 } }
       : {
-          initial: { opacity: 0, scale: 0.8 },
-          animate: { opacity: 1, scale: 1 },
+          initial: { scale: 0.94 },
+          animate: { scale: 1 },
           transition: { delay, duration: 0.5, ease: [0.22, 1, 0.36, 1] as const },
         };
 
@@ -100,6 +108,7 @@ export function HeroVisual() {
           stroke="url(#hero-path)"
           strokeWidth="3.5"
           strokeLinecap="round"
+          // Fully drawn at rest; the dash offset only animates the reveal.
           strokeDasharray="520"
           initial={{ strokeDashoffset: reduceMotion ? 0 : 520 }}
           animate={{ strokeDashoffset: 0 }}
@@ -265,8 +274,10 @@ function HeroNode({ x, y, label, colour, delay, pulse = false }: HeroNodeProps) 
 
   return (
     <motion.g
-      initial={reduceMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.4 }}
-      animate={{ opacity: 1, scale: 1 }}
+      // Scale-only: a node must never be invisible waiting for JS, because
+      // its label is part of the hero's message.
+      initial={reduceMotion ? { scale: 1 } : { scale: 0.75 }}
+      animate={{ scale: 1 }}
       transition={
         reduceMotion
           ? { duration: 0 }

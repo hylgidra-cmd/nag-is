@@ -28,9 +28,18 @@ export function Hero({ stats }: HeroProps) {
       />
 
       <div className="container-page relative py-16 sm:py-20 lg:py-28">
+        {/*
+          `min-w-0` guards both columns.
+
+          Grid items default to `min-width: auto`, so a column cannot shrink
+          below its content's min-content width — and the hero SVG carries an
+          intrinsic 520px width from its viewBox. This is a precaution against
+          that class of overflow on narrow screens; the layout was verified
+          correct at 600px and above.
+        */}
         <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_1fr] lg:gap-10">
           {/* ---- Copy ---- */}
-          <div>
+          <div className="min-w-0">
             <Reveal>
               <Badge tone="accent" size="lg" className="mb-6">
                 <GraduationCap aria-hidden="true" className="h-3.5 w-3.5" />
@@ -82,7 +91,7 @@ export function Hero({ stats }: HeroProps) {
           </div>
 
           {/* ---- Visual ---- */}
-          <Reveal delay={0.1} className="relative">
+          <Reveal delay={0.1} className="relative min-w-0">
             <HeroVisual />
           </Reveal>
         </div>
