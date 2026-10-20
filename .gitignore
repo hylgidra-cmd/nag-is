@@ -42,3 +42,6 @@ apps/api/prisma/*.db-journal
 
 # local storage abstraction (uploaded files in dev)
 apps/api/storage/
+
+# Vercel CLI: project link and the OIDC token it downloads
+.vercel
