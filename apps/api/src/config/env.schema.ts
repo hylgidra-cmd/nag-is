@@ -17,6 +17,9 @@ const port = z.coerce.number().int().min(1).max(65_535);
 /** A secret must be long enough to be worth the name. */
 const secret = z.string().min(32, 'must be at least 32 characters');
 
+/** Matches a loopback host in a URL or origin, in any of its spellings. */
+const LOCAL_ADDRESS = /\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/;
+
 export const envSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -139,7 +142,38 @@ export const envSchema = z
   .refine((env) => env.MAIL_DRIVER !== 'smtp' || Boolean(env.SMTP_HOST), {
     path: ['SMTP_HOST'],
     error: 'SMTP_HOST is required when MAIL_DRIVER="smtp".',
-  });
+  })
+  /*
+   * The three variables below default to localhost so a fresh clone runs with
+   * no configuration. Those defaults must never survive into production: they
+   * are not internal plumbing but values handed to real browsers — asset URLs,
+   * canonical links and the certificate verification URL printed on a
+   * certificate. A deployment that kept them would serve links pointing at the
+   * visitor's own machine, which fails silently and looks like broken content
+   * rather than a misconfiguration. Refusing to boot names the real problem.
+   */
+  .refine((env) => !(env.NODE_ENV === 'production' && LOCAL_ADDRESS.test(env.NEXT_PUBLIC_SITE_URL)), {
+    path: ['NEXT_PUBLIC_SITE_URL'],
+    error:
+      'NEXT_PUBLIC_SITE_URL still points at localhost. Set it to the public origin of the deployment, because canonical links and certificate verification URLs are built from it.',
+  })
+  .refine(
+    (env) => !(env.NODE_ENV === 'production' && LOCAL_ADDRESS.test(env.STORAGE_PUBLIC_BASE_URL)),
+    {
+      path: ['STORAGE_PUBLIC_BASE_URL'],
+      error:
+        'STORAGE_PUBLIC_BASE_URL still points at localhost, so stored files would be served from an address the visitor cannot reach. Set it to the public files base URL.',
+    },
+  )
+  .refine(
+    (env) =>
+      !(env.NODE_ENV === 'production' && env.CORS_ORIGINS.some((origin) => LOCAL_ADDRESS.test(origin))),
+    {
+      path: ['CORS_ORIGINS'],
+      error:
+        'CORS_ORIGINS still contains a localhost origin. Set it to the deployed origins, or to an empty string when the browser reaches the API same-origin and CORS is not involved.',
+    },
+  );
 
 export type Env = z.infer<typeof envSchema>;
 
