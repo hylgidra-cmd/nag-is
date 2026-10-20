@@ -112,6 +112,28 @@ describe('validateEnv', () => {
       );
     });
 
+    /*
+     * There is no order-creation endpoint, so checkout genuinely is not
+     * available. "none" is how a deployment says that truthfully, and it has
+     * to be allowed in production or the platform could not be deployed at
+     * all without inventing merchant credentials for an unimplemented driver.
+     */
+    it('allows PAYMENT_DRIVER="none" in production without provider credentials', () => {
+      const env = validateEnv(
+        productionEnv({
+          PAYMENT_DRIVER: 'none',
+          CLICK_MERCHANT_ID: '',
+          CLICK_SERVICE_ID: '',
+          CLICK_SECRET_KEY: '',
+        }),
+      );
+      expect(env.PAYMENT_DRIVER).toBe('none');
+    });
+
+    it('defaults to "none" rather than a driver with no implementation', () => {
+      expect(validateEnv(baseEnv()).PAYMENT_DRIVER).toBe('none');
+    });
+
     it('requires secure session cookies', () => {
       expect(() => validateEnv(productionEnv({ AUTH_COOKIE_SECURE: 'false' }))).toThrow(
         /AUTH_COOKIE_SECURE must be true in production/,

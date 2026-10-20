@@ -65,7 +65,15 @@ export const envSchema = z
     VIDEO_SIGNING_KEY_ID: z.string().optional(),
     VIDEO_PLAYBACK_TTL_SECONDS: z.coerce.number().int().min(60).default(7200),
 
-    PAYMENT_DRIVER: z.enum(['dev', 'payme', 'click']).default('dev'),
+    /*
+     * "none" means checkout is not available: there is no order-creation
+     * endpoint, so a paid course cannot be bought. Enrolling in one requires
+     * an already-paid OrderItem and otherwise fails with PAYMENT_REQUIRED.
+     * This mirrors VIDEO_DRIVER="none" above — the honest default for a
+     * capability that is not wired up, and the only value that can be
+     * deployed truthfully until a real provider is integrated.
+     */
+    PAYMENT_DRIVER: z.enum(['none', 'dev', 'payme', 'click']).default('none'),
     PAYMENT_CURRENCY: z.string().default('UZS'),
     PAYME_MERCHANT_ID: z.string().optional(),
     PAYME_MERCHANT_KEY: z.string().optional(),
@@ -87,14 +95,15 @@ export const envSchema = z
     NEXT_PUBLIC_SITE_URL: z.string().default('http://localhost:3000'),
   })
   /**
-   * The development payment adapter fabricates successful payments. Allowing
-   * it in production would mean handing out paid courses for free, so the
-   * process refuses to start in that combination.
+   * The development payment adapter is intended to fabricate successful
+   * payments. Allowing it in production would mean handing out paid courses
+   * for free, so the process refuses to start in that combination. Use "none"
+   * to deploy with checkout unavailable, which is honest rather than permissive.
    */
   .refine((env) => !(env.NODE_ENV === 'production' && env.PAYMENT_DRIVER === 'dev'), {
     path: ['PAYMENT_DRIVER'],
     error:
-      'PAYMENT_DRIVER="dev" is a development-only adapter and cannot run with NODE_ENV=production. Configure a real provider (payme or click).',
+      'PAYMENT_DRIVER="dev" is a development-only adapter and cannot run with NODE_ENV=production. Configure a real provider (payme or click), or set "none" to deploy with checkout unavailable.',
   })
   .refine(
     (env) => !(env.NODE_ENV === 'production' && !env.AUTH_COOKIE_SECURE),
