@@ -22,6 +22,7 @@
       "buildCommand": "cd ../.. && npm run build:packages && npm run db:generate:ci --workspace @nagis/api"
     }
   },
+  "regions": ["fra1"],
   "rewrites": [
     { "source": "/api/v1/(.*)", "destination": { "service": "api" } },
     { "source": "/(.*)", "destination": { "service": "web" } }
