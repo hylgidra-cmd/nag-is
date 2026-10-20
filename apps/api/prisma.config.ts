@@ -36,12 +36,19 @@ for (const candidate of [
  * that unpooled connection; locally there is no pooler, so DATABASE_URL is
  * used and nothing extra needs configuring.
  */
-const databaseUrl = process.env['DIRECT_DATABASE_URL'] ?? process.env['DATABASE_URL'];
+const databaseUrl =
+  process.env['DIRECT_DATABASE_URL'] ??
+  // Neon's Vercel integration injects the unpooled connection under its own
+  // name. Accepting it here means the direct URL is not duplicated into a
+  // second variable just to satisfy this file.
+  process.env['DATABASE_URL_UNPOOLED'] ??
+  process.env['DATABASE_URL'];
 
 if (!databaseUrl) {
   throw new Error(
-    'Neither DIRECT_DATABASE_URL nor DATABASE_URL is set. Copy .env.example to ' +
-      '.env in the repository root and set the PostgreSQL connection string.',
+    'No database connection string found. Set DIRECT_DATABASE_URL (or ' +
+      'DATABASE_URL_UNPOOLED, or DATABASE_URL). Locally, copy .env.example to ' +
+      '.env in the repository root.',
   );
 }
 
