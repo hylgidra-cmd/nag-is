@@ -4,6 +4,7 @@ import { t } from '@/i18n';
 import { getCurrentUser } from '@/lib/api/server';
 import { Card } from '@/components/ui/primitives';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
+import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher';
 import { ProfileForm, PasswordForm } from '@/components/dashboard/SettingsForms';
 
 export const metadata: Metadata = { title: t.dashboard.settings.title };
@@ -38,9 +39,9 @@ export default async function SettingsPage() {
       <Card className="p-5 sm:p-6">
         <h2 className="text-base font-bold text-heading">{t.dashboard.settings.languageTitle}</h2>
         <p className="mt-1 text-sm text-muted">{t.dashboard.settings.languageSubtitle}</p>
-        <p className="mt-4 inline-flex items-center gap-2 rounded-card border border-hairline bg-surface-muted px-3.5 py-2 text-sm font-medium text-heading">
-          Qaraqalpaqsha (latın)
-        </p>
+        <div className="mt-4">
+          <LanguageSwitcher />
+        </div>
       </Card>
     </div>
   );

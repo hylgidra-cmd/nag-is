@@ -33,14 +33,14 @@ export const kaa = {
     /** "naǵıs" means genuine / true — the promise behind the name. */
     tagline: 'Haqıyqıy bilim — haqıyqıy nátije',
     description:
-      "NAG'IS — Qaraqaraqalpaqstanda IT kásibin qaraqalpaq tilinde úyreniw ushın onlayn platforma.",
+      "NAG'IS — Zamanagóy IT kásibin sapalı úyreniw ushın onlayn platforma.",
   },
 
   meta: {
-    homeTitle: "NAG'IS — onlayn IT bilim beriw platformasi",
+    homeTitle: "NAG'IS — onlayn IT bilim beriw platforması",
     homeDescription:
       'Frontend, backend, Python, jasalma intellekt, dizayn hám basqa IT baǵdarları ' +
-      'boyınsha qaraqalpaq tilindegi kurslar.',
+      'boyınsha ámeliy hám sapalı onlayn kurslar.',
     coursesTitle: 'Kurslar',
     coursesDescription: 'Barlıq IT kursları: baǵdar, dáreje hám baha boyınsha saylań.',
     aboutTitle: 'Biz haqqımızda',
@@ -134,12 +134,12 @@ export const kaa = {
    * Landing page
    * ================================================================= */
   hero: {
-    badge: 'Qaraqalpaq tilindegi IT bilim',
-    title: 'IT kásibin ana tilińizde úyreniń',
-    titleAccent: 'ana tilińizde',
+    badge: 'Zamanagóy IT bilim',
+    title: 'IT kásibin keleshek ushın úyreniń',
+    titleAccent: 'keleshek ushın',
     subtitle:
       'Frontend, backend, Python, jasalma intellekt hám dizayn baǵdarları boyınsha ' +
-      'ámeliy kurslar. Hár sabaq qaraqalpaq tilinde, baslawshıdan professionalǵa shekem.',
+      'ámeliy kurslar. Sapalı hám túsinikli sabaqlar baslawshıdan professionalǵa shekem.',
     primaryCta: 'Kurslardı kóriw',
     secondaryCta: 'Biypul baslaw',
     stats: {
@@ -206,10 +206,10 @@ export const kaa = {
       subtitle: 'Platformanıń tiykarǵı ayrıqshalıqları.',
       items: [
         {
-          title: 'Tolıq qaraqalpaq tilinde',
+          title: 'Sapalı hám túsinikli',
           description:
-            'Hár bir sabaq, tapsırma hám túsindirme ana tilińizde. Awdarma emes — ' +
-            'baslanǵannan qaraqalpaq tilinde jazılǵan.',
+            'Hár bir sabaq, tapsırma hám túsindirme anıq hám ámeliy mısallar menen ' +
+            'jetkerip beriledi.',
         },
         {
           title: 'Ámeliyatqa tiykarlanǵan',
@@ -247,11 +247,11 @@ export const kaa = {
       subtitle: 'Eger juwabın tapalmasańız, bizge jazıń.',
       items: [
         {
-          question: 'Kurslar qaraqalpaq tilinde me?',
+          question: 'Kurslar qanday formatta beriledi?',
           answer:
-            'Hawa. Platformanıń pútkil interfeysi hám kurslardıń mazmunı qaraqalpaq ' +
-            'tilinde (latın jazıwında). Tek programmalastırıw terminleri hám kodtıń ózi ' +
-            'inglis tilinde qaladı — sebebi olar barlıq tillerde birdey jazıladı.',
+            'Platformadaǵı barlıq kurslar ámeliy sabaqlar hám qolay interfeys arqalı ' +
+            'beriledi. Programmalastırıw terminleri hám kod xalıqaralıq standartlarǵa ' +
+            'say kórsetiledi.',
         },
         {
           question: 'Oqıw ushın aldınǵı bilim kerek pe?',
@@ -290,7 +290,7 @@ export const kaa = {
         {
           question: 'Oqıtıwshı bolıp qosılıwım múmkin be?',
           answer:
-            'Hawa. Eger IT tarawında tájriybeńiz bolsa hám qaraqalpaq tilinde kurs ' +
+            'Hawa. Eger IT tarawında tájriybeńiz bolsa hám sapalı kurs ' +
             'jaratıwǵa qızıqsańız, biz menen baylanısıń.',
         },
       ],
@@ -306,8 +306,8 @@ export const kaa = {
 
   footer: {
     about:
-      "NAG'IS — Qaraqalpaqstanda IT bilimin qaraqalpaq tilinde ámeliy úyretiwge " +
-      'qaratılǵan onlayn platforma.',
+      "NAG'IS — IT bilimin ámeliy hám sapalı úyretiwge " +
+      'qaratılǵan zamanagóy onlayn platforma.',
     sections: {
       platform: 'Platforma',
       categories: 'Baǵdarlar',
@@ -327,26 +327,25 @@ export const kaa = {
     contactTitle: 'Baylanıs',
     location: 'Nókis, Qaraqalpaqstan, Ózbekstan',
     rights: (year: number) => `© ${year} NAG'IS. Barlıq huqıqlar qorǵalǵan.`,
-    builtIn: 'Qaraqalpaq tilinde islengen',
+    builtIn: 'Zamanagóy IT platforma',
   },
 
   about: {
     title: 'Biz haqqımızda',
     lead:
-      "NAG'IS — IT bilimin qaraqalpaq tilinde jetkeriw ushın islengen onlayn platforma.",
+      "NAG'IS — IT bilimin ámeliy hám sapalı jetkeriw ushın islengen onlayn platforma.",
     missionTitle: 'Maqsetimiz',
     mission:
-      'Qaraqalpaqstanda IT tarawına qızıǵıwshılar kóp, biraq sapalı oqıw materialları ' +
-      'kóbinese basqa tillerde. Bul til kesenesi úyreniwdi awırlastıradı. ' +
-      "NAG'IS sol kesenedi joq etiwdi maqset etedi: hár bir túsinik, hár bir mısal " +
-      'hám hár bir tapsırma qaraqalpaq tilinde.',
+      "NAG'IS — zamanagóy IT tarawında sapalı hám ámeliyatqa tiykarlanǵan bilimdi " +
+      'hár bir oqıwshıǵa qolay, túsinikli hám nátiyjeli formatta jetkiziwdi maqset etedi: ' +
+      'hár bir túsinik, hár bir mısal hám tapsırmalar ámeliy tájiriybe menen bekkemlenedi.',
     approachTitle: 'Yondashıwımız',
     approach: [
       {
-        title: 'Til — tiykar',
+        title: 'Sapalı mazmun',
         description:
-          'Materiallar awdarılmaydı, bálkim qaraqalpaq tilinde jazıladı. Terminler ' +
-          'birdey hám izbe-iz qollanıladı.',
+          'Oqıw materialları qánigeler tárepinen tayarlanıp, zamanagóy standartlar ' +
+          'hám qolay túsinikler tiykarında beriledi.',
       },
       {
         title: 'Ámeliyat — birinshi orında',
@@ -1357,4 +1356,14 @@ export const kaa = {
   },
 } as const;
 
-export type Dictionary = typeof kaa;
+type DeepDictionary<T> = {
+  [K in keyof T]: T[K] extends (...args: infer A) => any
+    ? (...args: A) => string
+    : T[K] extends readonly (infer U)[]
+      ? readonly DeepDictionary<U>[]
+      : T[K] extends object
+        ? DeepDictionary<T[K]>
+        : string;
+};
+
+export type Dictionary = DeepDictionary<typeof kaa>;

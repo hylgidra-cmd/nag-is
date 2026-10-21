@@ -11,8 +11,8 @@ export const metadata: Metadata = {
   applicationName: "NAGʼIS",
   keywords: [
     'IT kurslar',
-    'qaraqalpaq tilinde programmalastiriw',
-    'Qaraqalpaqstan IT bilim',
+    'programmalastırıw',
+    'IT tálim',
     'frontend',
     'backend',
     'Python',

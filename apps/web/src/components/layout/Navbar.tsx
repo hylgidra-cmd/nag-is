@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/Button';
 import { useSession } from '@/components/auth/SessionProvider';
 import { CategoryIcon } from '@/components/courses/CategoryIcon';
 import { ThemeToggle } from './ThemeToggle';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 const NAV_LINKS = [
   { href: '/', label: t.nav.home },
@@ -260,81 +261,85 @@ export function Navbar({ categories }: { categories: CategoryDto[] }) {
           <ThemeToggle className="hidden sm:inline-flex" />
 
           {/* ---- Auth area ---- */}
-          {isAuthenticated && user ? (
-            <div ref={userMenuRef} className="relative hidden lg:block">
-              <button
-                type="button"
-                onClick={() => toggleMenu('user')}
-                aria-expanded={userMenuOpen}
-                aria-haspopup="menu"
-                className="flex items-center gap-2 rounded-pill border border-hairline bg-surface py-1 pl-1 pr-2.5 transition-colors hover:bg-surface-muted"
-              >
-                <Avatar user={user} />
-                <span className="max-w-24 truncate text-sm font-medium text-heading">
-                  {user.fullName.split(' ')[0]}
-                </span>
-                <ChevronDown
-                  aria-hidden="true"
-                  className={cn(
-                    'h-3.5 w-3.5 text-faint transition-transform duration-200',
-                    userMenuOpen && 'rotate-180',
-                  )}
-                />
-              </button>
-
-              <AnimatePresence>
-                {userMenuOpen && (
-                  <motion.div
-                    role="menu"
-                    initial={{ opacity: 0, y: -8, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -8, scale: 0.98 }}
-                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-                    className="absolute right-0 top-full mt-2 w-60 origin-top-right rounded-panel border border-hairline bg-surface p-1.5 shadow-lifted"
-                  >
-                    <div className="border-b border-hairline px-3 pb-2.5 pt-2">
-                      <p className="truncate text-sm font-semibold text-heading">{user.fullName}</p>
-                      <p className="truncate text-xs text-faint">{user.email}</p>
-                    </div>
-
-                    <MenuLink href="/dashboard" icon={LayoutDashboard}>
-                      {t.nav.dashboard}
-                    </MenuLink>
-                    <MenuLink href="/dashboard/settings" icon={Settings}>
-                      {t.nav.settings}
-                    </MenuLink>
-                    {isAdmin && (
-                      <MenuLink href="/admin" icon={Shield}>
-                        {t.nav.admin}
-                      </MenuLink>
+          <div className="hidden items-center gap-2 lg:flex">
+            {isAuthenticated && user ? (
+              <div ref={userMenuRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => toggleMenu('user')}
+                  aria-expanded={userMenuOpen}
+                  aria-haspopup="menu"
+                  className="flex items-center gap-2 rounded-pill border border-hairline bg-surface py-1 pl-1 pr-2.5 transition-colors hover:bg-surface-muted"
+                >
+                  <Avatar user={user} />
+                  <span className="max-w-24 truncate text-sm font-medium text-heading">
+                    {user.fullName.split(' ')[0]}
+                  </span>
+                  <ChevronDown
+                    aria-hidden="true"
+                    className={cn(
+                      'h-3.5 w-3.5 text-faint transition-transform duration-200',
+                      userMenuOpen && 'rotate-180',
                     )}
+                  />
+                </button>
 
-                    <div className="mt-1 border-t border-hairline pt-1">
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onClick={() => void signOut()}
-                        disabled={pending}
-                        className="flex w-full items-center gap-2.5 rounded-card px-3 py-2 text-sm font-medium text-[var(--color-danger)] transition-colors hover:bg-[var(--color-danger-soft)] disabled:opacity-60"
-                      >
-                        <LogOut aria-hidden="true" className="h-4 w-4" />
-                        {t.nav.logout}
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          ) : (
-            <div className="hidden items-center gap-2 lg:flex">
-              <Button href="/login" variant="ghost" size="sm">
-                {t.nav.login}
-              </Button>
-              <Button href="/register" variant="ink" size="sm">
-                {t.nav.register}
-              </Button>
-            </div>
-          )}
+                <AnimatePresence>
+                  {userMenuOpen && (
+                    <motion.div
+                      role="menu"
+                      initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                      transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                      className="absolute right-0 top-full mt-2 w-60 origin-top-right rounded-panel border border-hairline bg-surface p-1.5 shadow-lifted"
+                    >
+                      <div className="border-b border-hairline px-3 pb-2.5 pt-2">
+                        <p className="truncate text-sm font-semibold text-heading">{user.fullName}</p>
+                        <p className="truncate text-xs text-faint">{user.email}</p>
+                      </div>
+
+                      <MenuLink href="/dashboard" icon={LayoutDashboard}>
+                        {t.nav.dashboard}
+                      </MenuLink>
+                      <MenuLink href="/dashboard/settings" icon={Settings}>
+                        {t.nav.settings}
+                      </MenuLink>
+                      {isAdmin && (
+                        <MenuLink href="/admin" icon={Shield}>
+                          {t.nav.admin}
+                        </MenuLink>
+                      )}
+
+                      <div className="mt-1 border-t border-hairline pt-1">
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => void signOut()}
+                          disabled={pending}
+                          className="flex w-full items-center gap-2.5 rounded-card px-3 py-2 text-sm font-medium text-[var(--color-danger)] transition-colors hover:bg-[var(--color-danger-soft)] disabled:opacity-60"
+                        >
+                          <LogOut aria-hidden="true" className="h-4 w-4" />
+                          {t.nav.logout}
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <>
+                <Button href="/login" variant="ghost" size="sm">
+                  {t.nav.login}
+                </Button>
+                <Button href="/register" variant="ink" size="sm">
+                  {t.nav.register}
+                </Button>
+              </>
+            )}
+
+            <LanguageSwitcher />
+          </div>
 
           {/* ---- Mobile toggle ---- */}
           <button
@@ -429,6 +434,11 @@ export function Navbar({ categories }: { categories: CategoryDto[] }) {
                   </div>
                 </div>
               )}
+
+              <div className="flex items-center justify-between border-t border-hairline pt-4">
+                <span className="text-sm text-muted">{t.dashboard.settings.languageTitle}</span>
+                <LanguageSwitcher />
+              </div>
 
               <div className="flex items-center justify-between border-t border-hairline pt-4">
                 <span className="text-sm text-muted">{t.nav.toggleTheme}</span>
